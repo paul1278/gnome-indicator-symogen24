@@ -1,0 +1,45 @@
+#!/usr/bin/python3
+import os
+from gi.repository import Gtk as gtk, AppIndicator3 as appindicator
+import requests
+from gi.repository import GLib
+
+
+def receive():
+  try:
+    r = requests.get('http://<ip>/status/powerflow', 
+                 headers={'Accept': 'application/json'})
+  except:
+    return None
+  return r.json()
+
+def menu():
+  menu = gtk.Menu()
+  
+  exittray = gtk.MenuItem('Exit Tray')
+  exittray.connect('activate', quit)
+  menu.append(exittray)
+  
+  menu.show_all()
+  return menu
+  
+
+def quit(_):
+  gtk.main_quit()
+
+def label(indicator):
+  d = receive()
+  if d != None:
+    indicator.set_label("{:.2f} kWh - {:.2f} kWh - {:.1f}%".format(d["site"]["P_PV"] / 1000, d["site"]["P_Load"] / 1000 * -1, d["inverters"][0]["SOC"]), "")
+    if d["site"]["P_PV"] > d["site"]["P_Load"] * -1:
+      indicator.set_icon("weather-clear")
+    else:
+      indicator.set_icon("weather-overcast")
+  GLib.timeout_add(1000, label, indicator)
+
+
+indicator = appindicator.Indicator.new("customtray", "weather-overcast", appindicator.IndicatorCategory.APPLICATION_STATUS)
+indicator.set_status(appindicator.IndicatorStatus.ACTIVE)
+indicator.set_menu(menu())
+label(indicator)
+gtk.main()

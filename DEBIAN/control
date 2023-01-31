@@ -1,0 +1,6 @@
+Package: gnome-indicator-symogen24
+Version: 1.0
+Architecture: amd64
+Maintainer: /dev/paul <git@dev-paul.de>
+Depends: python3,python3-requests
+Description: A nice tool for symogen24

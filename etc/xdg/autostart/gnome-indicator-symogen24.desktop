@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Exec=/usr/bin/nohup /usr/local/bin/gnome-indicator-symogen24 &
+X-GNOME-Autostart-enabled=true
+Name=GNOME-INDICATOR-SYMOGEN24
+Comment=
