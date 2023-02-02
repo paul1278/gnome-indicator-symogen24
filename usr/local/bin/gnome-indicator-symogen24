@@ -1,20 +1,29 @@
 #!/usr/bin/python3
 import os
-from gi.repository import Gtk as gtk, AppIndicator3 as appindicator
 import requests
-from gi.repository import GLib
+from gi.repository import Gtk as gtk, AppIndicator3 as appindicator, GLib
+from configparser import ConfigParser
 
+IP = None
 
 def receive():
   try:
-    r = requests.get('http://<ip>/status/powerflow', 
-                 headers={'Accept': 'application/json'})
+    r = requests.get('http://' + IP + '/status/powerflow', 
+                 headers={'Accept': 'application/json'}, timeout=5)
   except:
     return None
   return r.json()
 
 def menu():
   menu = gtk.Menu()
+
+  currentIp = gtk.MenuItem('IP: ' + ("No IP given" if IP == None else IP))
+  currentIp.connect('activate', openSymo)
+  menu.append(currentIp)
+
+  command_one = gtk.MenuItem('Edit Config')
+  command_one.connect('activate', editConfig)
+  menu.append(command_one)
   
   exittray = gtk.MenuItem('Exit Tray')
   exittray.connect('activate', quit)
@@ -22,24 +31,49 @@ def menu():
   
   menu.show_all()
   return menu
-  
+
+def editConfig(_):
+  os.system("gedit $HOME/.config/gnome-indicator.ini")
+  reloadIndicator()
+
+def openSymo(_):
+  os.system("xdg-open http://" + IP)
 
 def quit(_):
   gtk.main_quit()
 
-def label(indicator):
-  d = receive()
-  if d != None:
-    indicator.set_label("{:.2f} kWh - {:.2f} kWh - {:.1f}%".format(d["site"]["P_PV"] / 1000, d["site"]["P_Load"] / 1000 * -1, d["inverters"][0]["SOC"]), "")
-    if d["site"]["P_PV"] > d["site"]["P_Load"] * -1:
-      indicator.set_icon("weather-clear")
+def label(indicator, c = None):
+  if c != None:
+    indicator.set_label(c, "")
+  else:
+    d = receive()
+    if d != None:
+      indicator.set_label("{:.2f} kWh - {:.2f} kWh - {:.1f}%".format(d["site"]["P_PV"] / 1000, d["site"]["P_Load"] / 1000 * -1, d["inverters"][0]["SOC"]), "")
+      if d["site"]["P_PV"] > d["site"]["P_Load"] * -1:
+        indicator.set_icon("weather-clear")
+      else:
+        indicator.set_icon("weather-overcast")
+      GLib.timeout_add(1000, label, indicator)
     else:
-      indicator.set_icon("weather-overcast")
-  GLib.timeout_add(1000, label, indicator)
+      indicator.set_label("Invalid IP!", "")
 
+def reloadIndicator():
+  if readConfig() == False:
+    label(indicator, "NO IP!")
+  else:
+    label(indicator)
+  indicator.set_menu(menu())
+
+def readConfig():
+  global IP
+  config = ConfigParser()
+  config.read(os.environ["HOME"] + '/.config/gnome-indicator.ini')
+  try:
+    IP = config.get("symogen24","SYMO_IP")
+  except:
+    return False
 
 indicator = appindicator.Indicator.new("customtray", "weather-overcast", appindicator.IndicatorCategory.APPLICATION_STATUS)
 indicator.set_status(appindicator.IndicatorStatus.ACTIVE)
-indicator.set_menu(menu())
-label(indicator)
+reloadIndicator()
 gtk.main()

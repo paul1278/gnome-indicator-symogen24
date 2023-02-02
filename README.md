@@ -7,3 +7,10 @@ Best is to simply install the `.deb`-package. This can be downloaded here or you
 * Clone the repo
 * `./build.sh`
 
+## Config
+Open the configuration from the tray icon after running or manually open `~/.config/gnome-indicator.ini`. Put the following there:
+
+```ini
+[symogen24]
+SYMO_IP=<ip>
+```
