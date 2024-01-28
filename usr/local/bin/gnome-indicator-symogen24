@@ -1,6 +1,12 @@
 #!/usr/bin/python3
 import os
 import requests
+import gi
+
+gi.require_version('Gtk', '3.0')
+gi.require_version('AppIndicator3', '0.1')
+
+
 from gi.repository import Gtk as gtk, AppIndicator3 as appindicator, GLib
 from configparser import ConfigParser
 
@@ -17,15 +23,15 @@ def receive():
 def menu():
   menu = gtk.Menu()
 
-  currentIp = gtk.MenuItem('IP: ' + ("No IP given" if IP == None else IP))
+  currentIp = gtk.MenuItem(label='IP: ' + ("No IP given" if IP == None else IP))
   currentIp.connect('activate', openSymo)
   menu.append(currentIp)
 
-  command_one = gtk.MenuItem('Edit Config')
+  command_one = gtk.MenuItem(label='Edit Config')
   command_one.connect('activate', editConfig)
   menu.append(command_one)
   
-  exittray = gtk.MenuItem('Exit Tray')
+  exittray = gtk.MenuItem(label='Exit Tray')
   exittray.connect('activate', quit)
   menu.append(exittray)
   
