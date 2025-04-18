@@ -17,4 +17,7 @@ Open the configuration from the tray icon after running or manually open `~/.con
 ```ini
 [symogen24]
 SYMO_IP=<ip>
+INTERVAL=1000
 ```
+
+The `INTERVAL` is the polling interval in milliseconds.
