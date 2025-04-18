@@ -11,6 +11,7 @@ from gi.repository import Gtk as gtk, AppIndicator3 as appindicator, GLib
 from configparser import ConfigParser
 
 IP = None
+INTERVAL = 1000
 
 def receive():
   try:
@@ -59,10 +60,10 @@ def label(indicator, c = None):
         indicator.set_icon("weather-clear")
       else:
         indicator.set_icon("weather-overcast")
-      GLib.timeout_add(1000, label, indicator)
+      GLib.timeout_add(INTERVAL, label, indicator)
     else:
       indicator.set_label("Invalid IP!", "")
-      GLib.timeout_add(1000, label, indicator)
+      GLib.timeout_add(INTERVAL, label, indicator)
 
 def reloadIndicator():
   if readConfig() == False:
@@ -72,11 +73,15 @@ def reloadIndicator():
   indicator.set_menu(menu())
 
 def readConfig():
-  global IP
+  global IP,INTERVAL
   config = ConfigParser()
   config.read(os.environ["HOME"] + '/.config/gnome-indicator.ini')
   try:
     IP = config.get("symogen24","SYMO_IP")
+    INTERVAL = config.getint("symogen24", "INTERVAL", fallback=1000)
+    if INTERVAL <= 50:
+      INTERVAL = 1000
+    print("Read", IP, INTERVAL)
   except:
     return False
 
